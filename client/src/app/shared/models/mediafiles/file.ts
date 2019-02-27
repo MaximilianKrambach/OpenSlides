@@ -7,6 +7,7 @@ import { Deserializer } from '../base/deserializer';
 export class File extends Deserializer {
     public name: string;
     public type: string;
+    public pages?: number;
 
     /**
      * Needs to be fully optional, because the 'mediafile'-property in the mediaFile class is optional as well
