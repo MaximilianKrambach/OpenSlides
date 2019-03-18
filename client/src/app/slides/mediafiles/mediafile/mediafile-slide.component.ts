@@ -14,7 +14,11 @@ export class MediafileSlideComponent extends BaseSlideComponent<MediafileSlideDa
         super();
     }
 
-    @computed public get url(): string {
+    public get page(): string {
+        return this.data.element.page;
+    }
+
+    public get url(): string {
         return `${this.data.data.media_url_prefix}/${this.data.data.path}`;
     }
 }
