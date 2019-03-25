@@ -1,7 +1,7 @@
-import {Component} from '@angular/core';
+import { Component } from '@angular/core';
 
-import {BaseSlideComponent} from 'app/slides/base-slide-component';
-import {MediafileSlideData} from './mediafile-slide-data';
+import { BaseSlideComponent } from 'app/slides/base-slide-component';
+import { MediafileSlideData } from './mediafile-slide-data';
 
 @Component({
     selector: 'os-mediafile-slide',
