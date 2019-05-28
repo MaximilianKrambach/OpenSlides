@@ -36,6 +36,9 @@ export class SortingListComponent implements OnInit, OnDestroy {
      */
     public array: Selectable[];
 
+    public filteredArray: Selectable[];
+    public filterFn: (a: Selectable) => boolean;
+
     /**
      * The index of multiple selected elements. Allows for multiple items to be
      * selected and then moved
@@ -147,6 +150,7 @@ export class SortingListComponent implements OnInit, OnDestroy {
         } else {
             this.array = this.array.map(arrayValue => newValues.find(val => val.id === arrayValue.id));
         }
+        this.filterArray();
     }
 
     /**
@@ -167,20 +171,36 @@ export class SortingListComponent implements OnInit, OnDestroy {
         if (this.multiSelectedIndex.length < 2) {
             moveItemInArray(this.array, event.previousIndex, event.currentIndex);
         } else {
+            let isBeforeInsertion = true;
             const before: Selectable[] = [];
             const insertions: Selectable[] = [];
             const behind: Selectable[] = [];
             for (let i = 0; i < this.array.length; i++) {
-                if (!this.multiSelectedIndex.includes(i)) {
-                    if (i < event.currentIndex) {
-                        before.push(this.array[i]);
-                    } else if (i > event.currentIndex) {
-                        behind.push(this.array[i]);
+                if (this.filterFn(this.array[i])) {
+                    // visible item
+                    const indx = this.filteredArray.findIndex(item => item.id === this.array[i].id);
+                    if (indx < 0) {
+                        throw new Error('This should not happen');
+                    }
+                    if (!this.multiSelectedIndex.includes(indx)) {
+                        if (indx < event.currentIndex) {
+                            before.push(this.array[i]);
+                        } else if (indx > event.currentIndex) {
+                            behind.push(this.array[i]);
+                        } else {
+                            event.currentIndex < 1 ? behind.push(this.array[i]) : before.push(this.array[i]);
+                        }
                     } else {
-                        event.currentIndex < 1 ? behind.push(this.array[i]) : before.push(this.array[i]);
+                        insertions.push(this.array[i]);
+                        isBeforeInsertion = false;
                     }
                 } else {
-                    insertions.push(this.array[i]);
+                    // invisible item
+                    if (isBeforeInsertion) {
+                        before.push(this.array[i]);
+                    } else {
+                        behind.push(this.array[i]);
+                    }
                 }
             }
             this.array = [...before, ...insertions, ...behind];
@@ -223,5 +243,9 @@ export class SortingListComponent implements OnInit, OnDestroy {
      */
     public isSelectedRow(index: number): boolean {
         return this.multiSelectedIndex.includes(index);
+    }
+
+    private filterArray(): void {
+        this.filteredArray = this.array.filter(this.filterFn);
     }
 }

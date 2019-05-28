@@ -8,6 +8,40 @@
     <div class="title-slot"><h2 translate>Sort motions</h2></div>
 </os-head-bar>
 
+<div class="custom-table-header flex-spaced on-transition-fade">
+        <div class="filter-count">
+            <span> TODO shown&nbsp;</span><span translate>of</span>
+            <span>&nbsp;TODO TOTAL</span>
+        </div>
+        <div class="current-filters" *ngIf="hasActiveTagFilter">
+            <div><span translate>Active filters</span>:&nbsp;</div>
+            <div>
+                <button mat-button (click)="resetFilters()">
+                    <mat-icon inline>cancel</mat-icon>
+                    <span translate>Clear all</span>
+                </button>
+            </div>
+            <div *ngIf="hasActiveTagFilter">
+                <span>({{ getCurrentTagFilterNames() }})</span>
+            </div>
+        </div>
+        <div class="flex-spaced">
+            <div *ngIf="tagFilterOptions.length">
+                <button mat-button [matMenuTriggerFor]="tagFilterMenu">
+                    <span class="upper" translate>Tags</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <mat-menu #tagFilterMenu="matMenu">
+        <div *ngFor="let tagOption of tagFilterOptions">
+            <button mat-menu-item (click)="onFilterChange(tagOption.id)">
+                <mat-icon *ngIf="tagOption.state">checked</mat-icon>
+                <span>{{ tagOption.label }}</span>
+            </button>
+        </div>
+    </mat-menu>
+
 <mat-card class="os-form-card">
     <h3>{{ categoryName }}</h3>
     <br />

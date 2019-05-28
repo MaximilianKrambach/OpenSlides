@@ -14,8 +14,8 @@
 
 <div class="custom-table-header flex-spaced on-transition-fade">
     <div class="filter-count">
-        <span> {{ seenNodes[0] }}&nbsp;</span><span translate>of</span>
-        <span>&nbsp;{{ seenNodes[1] }}</span>
+        <span> TODO shown&nbsp;</span><span translate>of</span>
+        <span>&nbsp;TODO TOTAL</span>
     </div>
     <div class="current-filters" *ngIf="hasActiveFilter">
         <div><span translate>Active filters</span>:&nbsp;</div>
@@ -25,19 +25,24 @@
                 <span translate>Clear all</span>
             </button>
         </div>
+        <div *ngIf="hasActiveTagFilter">
+            <span>({{ getCurrentTagFilterNames() }})</span>
+        </div>
+        <div
+            *ngIf="hasActiveCatFilter"
+            [ngClass]="hasActiveTagFilter ? 'spacer-left-10' : ''"
+        >
+            <span>({{ getCurrentCategoryFilterNames() }})</span>
+        </div>
     </div>
     <div class="flex-spaced">
         <div *ngIf="categoryFilterOptions.length">
-            <button mat-button [matMenuTriggerFor]="catFilterMenu"
-            [matBadge]="activeCatFilterCount > 0 ? activeCatFilterCount : null"
-            matBadgeColor="accent">
+            <button mat-button [matMenuTriggerFor]="catFilterMenu">
                 <span class="upper" translate>Categories</span>
             </button>
         </div>
         <div *ngIf="tagFilterOptions.length">
-            <button mat-button [matMenuTriggerFor]="tagFilterMenu"
-            [matBadge]="activeTagFilterCount > 0 ? activeTagFilterCount : null"
-            matBadgeColor="accent">
+            <button mat-button [matMenuTriggerFor]="tagFilterMenu">
                 <span class="upper" translate>Tags</span>
             </button>
         </div>
@@ -66,7 +71,6 @@
         #osSortedTree
         parentKey="sort_parent_id"
         weightKey="weight"
-        (visibleNodes)="onChangeAmountOfItems($event)"
         (hasChanged)="receiveChanges($event)"
         [model]="motionsObservable"
         [filterChange]="changeFilter"

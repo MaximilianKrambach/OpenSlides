@@ -44,9 +44,9 @@ export class CallListComponent extends SortTreeViewComponent<ViewMotion> impleme
     public hasChanged = false;
 
     public tagFilterOptions: SortTreeFilterOption[] = [];
-    public activeTagFilterCount = 0;
+    public hasActiveTagFilter: boolean;
     public categoryFilterOptions: SortTreeFilterOption[] = [];
-    public activeCatFilterCount = 0;
+    public hasActiveCatFilter: boolean;
 
     /**
      * BehaviourSubject to get informed every time the filters change.
@@ -245,17 +245,17 @@ export class CallListComponent extends SortTreeViewComponent<ViewMotion> impleme
      */
     private onSubscribedFilterChange(model: 'tag' | 'category', value: number[]): void {
         if (model === 'tag') {
-            this.activeTagFilterCount = value.length;
+            this.hasActiveTagFilter = value.length === 0 ? false : true;
             this.tagFilterOptions.forEach(filterOption => {
                 filterOption.state = value && value.some(v => v === filterOption.id);
             });
         } else {
-            this.activeCatFilterCount = value.length;
+            this.hasActiveCatFilter = value.length === 0 ? false : true;
             this.categoryFilterOptions.forEach(filterOption => {
                 filterOption.state = value && value.some(v => v === filterOption.id);
             });
         }
-        this.hasActiveFilter = this.activeCatFilterCount > 0 || this.activeTagFilterCount > 0;
+        this.hasActiveFilter = this.hasActiveCatFilter || this.hasActiveTagFilter;
 
         const currentTagFilters = this.tagFilterOptions.filter(option => option.state === true);
         const currentCategoryFilters = this.categoryFilterOptions.filter(option => option.state === true);
@@ -278,5 +278,19 @@ export class CallListComponent extends SortTreeViewComponent<ViewMotion> impleme
                 return false;
             }
         );
+    }
+
+    public getCurrentTagFilterNames(): string {
+        return this.tagFilterOptions
+            .filter(f => f.state === true)
+            .map(f => f.label)
+            .join(', ');
+    }
+
+    public getCurrentCategoryFilterNames(): string {
+        return this.categoryFilterOptions
+            .filter(f => f.state === true)
+            .map(f => f.label)
+            .join(', ');
     }
 }
