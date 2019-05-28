@@ -4,16 +4,15 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { TranslateService } from '@ngx-translate/core';
 
-import { CanComponentDeactivate } from 'app/shared/utils/watch-sorting-tree.guard';
+import { BaseViewComponent } from 'app/site/base/base-view';
 import { CategoryRepositoryService } from 'app/core/repositories/motions/category-repository.service';
 import { MatSnackBar } from '@angular/material';
 import { MotionRepositoryService } from 'app/core/repositories/motions/motion-repository.service';
 import { PromptService } from 'app/core/ui-services/prompt.service';
 import { SortingListComponent } from 'app/shared/components/sorting-list/sorting-list.component';
-import { SortTreeViewComponent, SortTreeFilterOption } from 'app/site/base/sort-tree.component';
-import { TagRepositoryService } from 'app/core/repositories/tags/tag-repository.service';
 import { ViewCategory } from 'app/site/motions/models/view-category';
 import { ViewMotion } from 'app/site/motions/models/view-motion';
+import { CanComponentDeactivate } from 'app/shared/utils/watch-sorting-tree.guard';
 
 /**
  * View for rearranging and renumbering the motions of a category. The {@link onNumberMotions}
@@ -25,7 +24,7 @@ import { ViewMotion } from 'app/site/motions/models/view-motion';
     templateUrl: './category-sort.component.html',
     styleUrls: ['./category-sort.component.scss']
 })
-export class CategorySortComponent extends SortTreeViewComponent<ViewMotion> implements OnInit, CanComponentDeactivate {
+export class CategorySortComponent extends BaseViewComponent implements OnInit, CanComponentDeactivate {
     /**
      * The current category. Determined by the route
      */
@@ -45,13 +44,6 @@ export class CategorySortComponent extends SortTreeViewComponent<ViewMotion> imp
      * Flag to define if the list has changed.
      */
     public hasChanged = false;
-
-    /**
-     * BehaviourSubject to get informed every time the filters change.
-     */
-    protected activeTagFilters: BehaviorSubject<number[]> = new BehaviorSubject<number[]>([]);
-    public tagFilterOptions: SortTreeFilterOption[];
-    public hasActiveTagFilter: boolean;
 
     /**
      * Copied array of the motions in this category
@@ -100,15 +92,14 @@ export class CategorySortComponent extends SortTreeViewComponent<ViewMotion> imp
      */
     public constructor(
         title: Title,
-        translate: TranslateService,
+        protected translate: TranslateService, // protected required for ng-translate-extract
         matSnackBar: MatSnackBar,
-        promptService: PromptService,
+        private promptService: PromptService,
         private repo: CategoryRepositoryService,
         private route: ActivatedRoute,
-        private motionRepo: MotionRepositoryService,
-        private tagRepo: TagRepositoryService
+        private motionRepo: MotionRepositoryService
     ) {
-        super(title, translate, matSnackBar, promptService);
+        super(title, translate, matSnackBar);
     }
 
     /**
@@ -129,37 +120,6 @@ export class CategorySortComponent extends SortTreeViewComponent<ViewMotion> imp
                 this.motionsSubject.next(this.handleMotionUpdates(filtered));
             }
         });
-        this.subscriptions.push(
-            this.tagRepo.getViewModelListBehaviorSubject().subscribe(tags => {
-                if (tags && tags.length) {
-                    this.tagFilterOptions = tags.map(tag => {
-                        return {
-                            label: tag.name,
-                            id: tag.id,
-                            state:
-                                this.tagFilterOptions &&
-                                this.tagFilterOptions.some(tagfilter => {
-                                    return tagfilter.id === tag.id && tagfilter.state === true;
-                                })
-                        };
-                    });
-                    this.tagFilterOptions.push({
-                        label: this.translate.instant('No tags'),
-                        id: 0,
-                        state:
-                            this.tagFilterOptions &&
-                            this.tagFilterOptions.some(tagfilter => {
-                                return tagfilter.id === 0 && tagfilter.state === true;
-                            })
-                    });
-                } else {
-                    this.tagFilterOptions = [];
-                }
-            })
-        );
-        this.subscriptions.push(
-            this.activeTagFilters.subscribe((value: number[]) => this.onSubscribedFilterChange(value))
-        );
     }
 
     /**
@@ -270,55 +230,5 @@ export class CategorySortComponent extends SortTreeViewComponent<ViewMotion> imp
             return await this.promptService.open(title, content);
         }
         return true;
-    }
-
-    /**
-     * Helper to trigger an update of the filter itself and the information about
-     * the state of filters
-     *
-     * @param model the property/model the filter is for
-     * @param value
-     */
-    private onSubscribedFilterChange(value: number[]): void {
-        this.hasActiveTagFilter = value.length === 0 ? false : true;
-        this.hasActiveFilter = this.hasActiveTagFilter;
-        this.tagFilterOptions.forEach(filterOption => {
-            filterOption.state = value && value.includes(filterOption.id);
-        });
-        this.changeFilter.emit(
-            (item: ViewMotion): boolean => {
-                if (!value.length) {
-                    return false;
-                }
-                if (!item.category_id && value.includes(0)) {
-                    return false;
-                }
-                return !value.includes(item.category_id);
-            }
-        );
-    }
-
-    /**
-     * Function to set the active filters to null.
-     */
-    public resetFilters(): void {
-        this.activeTagFilters.next([]);
-    }
-
-    public getCurrentTagFilterNames(): string {
-        return this.tagFilterOptions
-            .filter(f => f.state === true)
-            .map(f => f.label)
-            .join(', ');
-    }
-
-    public onFilterChange(filter: number): void {
-        const value = this.activeTagFilters.value;
-        if (!value.includes(filter)) {
-            value.push(filter);
-        } else {
-            value.splice(value.indexOf(filter), 1);
-        }
-        this.activeTagFilters.next(value);
     }
 }
